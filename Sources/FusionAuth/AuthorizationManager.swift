@@ -17,31 +17,33 @@ public class AuthorizationManager {
     public static let instance = AuthorizationManager()
 
     private var configuration: AuthorizationConfiguration?
-    private var tokenManager: TokenManager?
+    private var tokenManager: TokenManager = TokenManager().withStorage(storage: MemoryStorage())
 
     private let eventSubject = CurrentValueSubject<FusionAuthState?, Never>(nil)
+    private(set) var authState: FusionAuthState?
 
     private init() {}
 
     /// Initialize the AuthorizationManager with the given configuration
-    @discardableResult public func initialize(configuration: AuthorizationConfiguration, storage: Storage? = nil) -> Self {
+    @discardableResult public func initialize(configuration: AuthorizationConfiguration, storage: Storage = MemoryStorage()) -> Self {
         self.configuration = configuration
         self.initTokenManager(storage)
         return self
     }
 
     /// Initialize the TokenManager with the given storage
-    internal func initTokenManager(_ storage: Storage? = nil) {
-        self.tokenManager = TokenManager().withStorage(storage: storage ?? MemoryStorage())
+    internal func initTokenManager(_ storage: Storage = MemoryStorage()) {
+        self.tokenManager = TokenManager().withStorage(storage: storage)
 
-        if let authState = tokenManager?.getAuthState() {
+        if let authState = tokenManager.getAuthState() {
             triggerEvent(authState)
+            self.authState = authState
         }
     }
 
     /// Returns the current TokenManager
     public func getTokenManager() -> TokenManager {
-        return tokenManager!
+        return tokenManager
     }
 
     /// Returns a fresh access token
@@ -59,12 +61,21 @@ public class AuthorizationManager {
 
     /// Retrieves the access token, if available
     public func getAccessToken() -> String? {
-        return self.tokenManager?.getAuthState()?.accessToken
+        guard authState == nil else {
+            return authState?.accessToken
+        }
+        self.authState = self.tokenManager.getAuthState()
+        return authState?.accessToken
     }
 
     /// Retrieves the access token expiration, if available
     public func getAccessTokenExpirationTime() -> Date? {
-        return self.tokenManager?.getAuthState()?.accessTokenExpirationTime
+        guard authState == nil else {
+            return authState?.accessTokenExpirationTime
+        }
+
+        self.authState = self.tokenManager.getAuthState()
+        return authState?.accessTokenExpirationTime
     }
 
     /// Checks if the stored access token is expired.
@@ -78,7 +89,11 @@ public class AuthorizationManager {
 
     /// Retrieves the ID token, if available
     public func getIdToken() -> String? {
-        return self.tokenManager?.getAuthState()?.idToken
+        guard authState == nil else {
+            return authState?.idToken
+        }
+        self.authState = tokenManager.getAuthState()
+        return authState?.idToken
     }
 
     internal func updateAuthState(authState: OIDAuthState) throws {
@@ -100,12 +115,13 @@ public class AuthorizationManager {
     }
 
     private func updateAuthState(fusionAuthState: FusionAuthState) throws {
-        try self.tokenManager?.saveAuthState(fusionAuthState)
+        try self.tokenManager.saveAuthState(fusionAuthState)
         triggerEvent(fusionAuthState)
     }
 
     internal func clearState() throws {
-        try self.tokenManager?.clearAuthState()
+        try self.tokenManager.clearAuthState()
+        authState = nil
         triggerEvent(nil)
     }
 
@@ -153,8 +169,10 @@ extension AuthorizationManager {
             return self
         }
 
+        let tokenStorage = storage ?? AuthorizationConfiguration.getStorageFromPlist(bundle) ?? MemoryStorage()
+
         self.configuration = configuration
-        self.initTokenManager(storage ?? AuthorizationConfiguration.getStorageFromPlist(bundle))
+        self.initTokenManager(tokenStorage)
         return self
     }
 }
