@@ -8,7 +8,7 @@ extension OAuthAuthorizationService {
     }
 
     internal func getUserAgent(prefersEphemeralSession: Bool = false) throws -> OIDExternalUserAgent {
-        guard let userAgent = OIDExternalUserAgentIOS(presenting: getPresenting(), prefersEphemeralWebBrowserSession: prefersEphemeralSession) else {
+        guard let userAgent = OIDExternalUserAgentIOS(presenting: getPresenting(), prefersEphemeralSession: prefersEphemeralSession) else {
             throw OAuthError.invalidUserAgent
         }
         return userAgent
