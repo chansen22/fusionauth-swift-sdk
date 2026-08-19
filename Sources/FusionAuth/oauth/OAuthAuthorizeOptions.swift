@@ -32,6 +32,9 @@ public struct OAuthAuthorizeOptions {
     /// See [OIDC prompt parameter](https://fusionauth.io/docs/lifecycle/authenticate-users/oauth/prompt)
     /// for more information.
     let prompt: String?
+    /// Whether the OAuth session should use an ephemeral web browser session.
+    /// When true, the session will not share cookies with Safari, preventing SSO cookie leakage between users.
+    let prefersEphemeralSession: Bool
 
     /// Creates a new instance of OAuthAuthorizeOptions.
     public init(
@@ -43,7 +46,8 @@ public struct OAuthAuthorizeOptions {
         nonce: String? = nil,
         state: String? = nil,
         userCode: String? = nil,
-        prompt: String? = nil
+        prompt: String? = nil,
+        prefersEphemeralSession: Bool = false
     ) {
         self.redirectUriSuffix = redirectUriSuffix
         self.bundleId = bundleId
@@ -55,5 +59,6 @@ public struct OAuthAuthorizeOptions {
         self.state = state
         self.userCode = userCode
         self.prompt = prompt
+        self.prefersEphemeralSession = prefersEphemeralSession
     }
 }

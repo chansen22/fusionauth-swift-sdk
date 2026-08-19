@@ -143,11 +143,11 @@ extension OAuthAuthorizationService {
                                               redirectURL: URL(string: options.redirectUri)!,
                                               responseType: OIDResponseTypeCode,
                                               additionalParameters: getParametersFromOptions(options))
-        let presenting = self.getPresenting()
+        let userAgent = try self.getUserAgent(prefersEphemeralSession: options.prefersEphemeralSession)
 
         let authState: OIDAuthState = try await withCheckedThrowingContinuation { continuation in
             DispatchQueue.main.async {
-                OAuthAuthorizationStore.shared.store(OIDAuthState.authState(byPresenting: request, presenting: presenting) { authState, error in
+                OAuthAuthorizationStore.shared.store(OIDAuthState.authState(byPresenting: request, externalUserAgent: userAgent) { authState, error in
                     if error != nil {
                         continuation.resume(throwing: error!)
                         return
@@ -194,7 +194,7 @@ extension OAuthAuthorizationService {
 
         let configuration = try await getConfiguration()
 
-        let userAgent = try self.getUserAgent()
+        let userAgent = try self.getUserAgent(prefersEphemeralSession: options.prefersEphemeralSession)
 
         let request: OIDEndSessionRequest
 

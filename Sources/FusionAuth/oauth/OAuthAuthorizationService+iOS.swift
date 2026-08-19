@@ -7,8 +7,8 @@ extension OAuthAuthorizationService {
         return UIApplication.topViewController!
     }
 
-    internal func getUserAgent() throws -> OIDExternalUserAgent {
-        guard let userAgent = OIDExternalUserAgentIOS(presenting: getPresenting()) else {
+    internal func getUserAgent(prefersEphemeralSession: Bool = false) throws -> OIDExternalUserAgent {
+        guard let userAgent = OIDExternalUserAgentIOS(presenting: getPresenting(), prefersEphemeralWebBrowserSession: prefersEphemeralSession) else {
             throw OAuthError.invalidUserAgent
         }
         return userAgent

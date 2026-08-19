@@ -16,16 +16,21 @@ public struct OAuthLogoutOptions {
     /// An opaque value used by the client to maintain state between the request and callback.
     /// The authorization server includes this value when redirecting the user-agent back to the client.
     let state: String?
+    /// Whether the OAuth session should use an ephemeral web browser session.
+    /// When true, the session will not share cookies with Safari.
+    let prefersEphemeralSession: Bool
 
     /// Creates a new instance of OAuthLogoutOptions.
     public init(
         bundleId: String = Bundle.main.bundleIdentifier ?? "",
         postLogoutRedirectUriSuffix: String = ":/oauth2redirect/ios-provider",
-        state: String? = nil
+        state: String? = nil,
+        prefersEphemeralSession: Bool = false
     ) {
         self.bundleId = bundleId
         self.postLogoutRedirectUriSuffix = postLogoutRedirectUriSuffix
         self.postLogoutRedirectUri = bundleId + postLogoutRedirectUriSuffix
         self.state = state
+        self.prefersEphemeralSession = prefersEphemeralSession
     }
 }
